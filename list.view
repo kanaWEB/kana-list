@@ -3,6 +3,8 @@
 $objects = Functions::getdir(USER_OBJECTS);
 include(CORE_VIEWS."menu/menu_group.view");
 
+
+
 //Check if a group is selected
 if(isset($_["group"])){
 	//Check if the group belong to user
@@ -60,6 +62,7 @@ foreach($objects as $object){
 			$webobjects[$key]["type"] = $object;
 			
 			$webobjects[$key]["name"] = $action["object_name"];
+			$webobjects[$key]["description"] = $action["object_description"];
 			$webobjects[$key]["icon"] = USER_OBJECTS.$object."/icon.png";
 			$object_db = new Entity($object);
 			$object_db = $object_db->getById($action["object_key"]);
@@ -69,6 +72,7 @@ foreach($objects as $object){
 			foreach($actions_array as $actions){
 				$webobjects[$key]["actions"][] = Variable::md2var($md_actions_dir."/".$actions);
 			}
+
 
 	//Get GPIO state (if objects have 1,n GPIO)
 			if(isset($object_db["gpio"])){
@@ -87,7 +91,10 @@ foreach($objects as $object){
 
 	}
 }
+?>
 
+<div id="widgets" class="js-masonry" data-masonry-options='{"columnWidth": 100, "itemSelector": ".widget" }'>
+<?
 //If there is webobjects to show
 if(isset($webobjects)){
 	foreach($webobjects as $webobject){
@@ -100,7 +107,7 @@ if(isset($webobjects)){
 		//clearstatcache();
 		if(file_exists($widget_override_path.".html")){
 			$widget = $widget_override_path;
-			var_dump($webobject);
+			
 		}
 		else
 		{
@@ -110,7 +117,7 @@ if(isset($webobjects)){
 	}
 
 
-
+echo '</div>';
 }
 else{
 //If there is no webobjects to show redirect to Configuration
