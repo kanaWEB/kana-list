@@ -1,147 +1,92 @@
 <?php
 //Display objects as a list
-$objects = Functions::getdir(USER_OBJECTS);
-include(CORE_VIEWS."menu/menu_group.view");
-
-
+include(CORE_VIEWS."menu/items/menu_group.view");
 
 //Check if a group is selected
 if(isset($_["group"])){
+	$current_group = $_["group"];
 	//Check if the group belong to user
-	if($currentUser->GroupRight($_["group"])){
+	if($currentUser->GroupRight($current_group)){
 		//Check if it isn't already the default group
-		if($currentUser->default_group() != $_["group"]){
+		if($currentUser->default_group() != $current_group){
 			$default_group_button = [
-			"group" => $_["group"],
+			"group" => $current_group,
 			"iduser" => $currentUser->id(),
 			];
+
 			$tpl->assign("button",$default_group_button);
 
 			$tpl->draw(CORE_VIEWS."buttons/default_group");
 		}
 	}
 }
-else
-{
+else{
+	$current_group = 1; //@todo verify if user has access to group ID 1
+
+	//If there is a default group and no group is selected we redirect to the default group
 	if($currentUser->default_group() != ""){
-		redirect("views","?view=list&group=".$currentUser->default_group());
+		$current_group = $currentUser->default_group();
 	}
 }
 
+//If current user as the right to see this group
+if($currentUser->GroupRight($current_group)){
+	$tpl->draw(CORE_VIEWS."grids/container/fluid");
+		$sensors_exists = Draw::sensors_widgets($current_group,$tpl);
+		$webobjects_exists = Draw::objects_widgets($current_group,$tpl);
+	$tpl->draw(CORE_VIEWS."grids/row/2close");
+}
+else{
+//If current user doesn't have access to this group
+	$tpl->assign("text","You don't have access to this group");
+	$tpl->draw(CORE_VIEWS."text/h1");
+}
 
 
-if($currentUser->GroupRight($_["group"])){
-	$key = 0;
-//For each objects
+/*
+	foreach($sensors as $sensor_name){
+		//Get sensors configuration
+		
 
-	foreach($objects as $object){
-
-	//Get actions from objects	
-		$actions_db = new Entity($object."_actions",Variable::actions_fields());
-
+		//Get all sensors inside this group
 		if(isset($_["group"])){
-			$actions_db = $actions_db->loadAll([
+			$sensor_widgets = $sensors_db->loadAll([
 				"group_key" => $_["group"]
 				]);
 		}
-	//else
-	//{
-	//	$allactions = True;
-	//	$actions_db = $actions_db->populate();
-	//}
 
-	//$action_authorized = True;
-//If objects has actions
-		if($actions_db){
-			foreach($actions_db as $action){
+		if($sensor_widgets){
+			foreach($sensor_widgets as $sensor_widget){
+				$websensors[$key]["id"] = $sensor_widget["id"];
+				$websensors[$key]["widget"] = $sensor_name;
+				$websensors[$key]["type"] = $sensor_name;
+				$websensors[$key]["datalink"] = $sensor_widget["sensor_id"];
 
-			//if($allactions){
-			//	$action_authorized = $currentUser->GroupRight($action["group_key"]);
-			//}
+				$websensors[$key]["name"] = htmlspecialchars_decode($sensor_widget["entity_name"]);
+				$websensors[$key]["description"] = htmlspecialchars_decode($sensor_widget["entity_description"]);
+				$websensors[$key]["icon"] = USER_SENSORS.$sensor_name."/icon.png";
 
-			//if($action_authorized){
-				$webobjects[$key]["id"] = $action["id"];
-				$webobjects[$key]["widget"] = $action["action"];
-				$webobjects[$key]["type"] = $object;
+				$sensor_data_db = new Entity("data","data/".$sensor_widget["sensor_id"]);
+				$sensor_data = $sensor_data_db->getById($sensor_data_db->rowCount());
+				$data_unparsed = $sensor_data["data"];
 
-				$webobjects[$key]["name"] = htmlspecialchars_decode($action["object_name"]);
-				$webobjects[$key]["description"] = htmlspecialchars_decode($action["object_description"]);
-				$webobjects[$key]["icon"] = USER_OBJECTS.$object."/icon.png";
-				if(file_exists(USER_OBJECTS.$object.$object.".txt")){
-				$object_db = new Entity($object);
-				$object_db = $object_db->getById($action["object_key"]);
-				}
-				else
-				{
-				$object_db = false;
-				}
-
-				$md_actions_dir = (USER_OBJECTS.$object."/actions/".$action["action"]."/actions/");
-				$actions_array = Functions::getdir($md_actions_dir);
-				foreach($actions_array as $actions){
-					$webobjects[$key]["actions"][] = Variable::md2var($md_actions_dir."/".$actions);
-				}
-
-
-	//Get GPIO state (if objects have 1,n GPIO)
-				if(isset($object_db["gpio"])){
-					$gpio = $object_db["gpio"];
-					include(CORE_DATA."gpio/pinstate.data");
-					$webobjects[$key]["state"] = $data ? "success" : "danger";
-				}
-				else
-				{
-				//Else get state from database
-					$webobjects[$key]["state"] = $action["state"] ? "success" : "danger";
-				}
-			//}
-				$key++;
-			}
-
-		}
-	}
-	?>
-
-	<div id="widgets" class="js-masonry" data-masonry-options='{"columnWidth": 100, "itemSelector": ".widget" }'>
-		<?
-//If there is webobjects to show
-		if(isset($webobjects)){
-			foreach($webobjects as $webobject){
-		//var_dump($webobject);
-
-				$tpl->assign("webobject",$webobject);
-				$widget_override_path = USER_OBJECTS.$webobject["type"]."/widgets/".$webobject["widget"] ."/".$webobject["widget"];
-		//var_dump($widget_override_path);
-				$widget_default = CORE_WIDGETS."switch/switch";
-		//clearstatcache();
-				if(file_exists($widget_override_path.".html")){
-					$widget = $widget_override_path;
-
-				}
-				else
-				{
-					$widget = $widget_default;
-				}
-				$tpl->draw($widget);
-			}
-
-
-			echo '</div>';
-		}
-		else{
-//If there is no webobjects to show redirect to Configuration
-			if($currentUser->isadmin()){
-				$tpl->assign("text","There is nothing in this group, do you want to create an object?");
-				$tpl->draw(CORE_VIEWS."text/h1");
-				$tpl->assign("leftmenu_active",false);
-				include(CORE_VIEWS."menu/left/left_objects.view");
+				include(USER_SENSORS.$sensor_name."/data/parser.data");
+				$websensors[$key]["value"] = $data;
+				$websensors[$key]["state"] = $data_unparsed ? "success" : "danger";
+			$key++;
 			}
 		}
 	}
-	else
-	{
-		$tpl->assign("text","You don't have access to this group");
-		$tpl->draw(CORE_VIEWS."text/h1");
-	}
+*/
 
-	?>
+	
+
+/*
+	if(isset($websensors)){
+			foreach($websensors as $websensor){
+				Draw::sensors_widgets($websensor,$tpl);
+			}
+		}
+*/
+
+		?>

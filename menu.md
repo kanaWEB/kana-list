@@ -1,3 +1,3 @@
-icon                  |text
-----------------------|--------
-glyphicon-folder-close|List
+icon                            |text
+--------------------------------|--------
+glyphicon glyphicon-folder-close|List
