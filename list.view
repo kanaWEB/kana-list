@@ -1,92 +1,89 @@
 <?php
 //Display objects as a list
-include(CORE_VIEWS."menu/items/menu_group.view");
-
+include(CORE_TEMPLATES."menu/items/menu_group.view");
+$dynamic_js[] = CORE_TEMPLATES."/dashboard/effect/effect_default.js";
 //Check if a group is selected
-if(isset($_["group"])){
-	$current_group = $_["group"];
-	//Check if the group belong to user
-	if($currentUser->GroupRight($current_group)){
-		//Check if it isn't already the default group
-		if($currentUser->default_group() != $current_group){
-			$default_group_button = [
-			"group" => $current_group,
-			"iduser" => $currentUser->id(),
-			];
+if (isset($_["group"])) {
+    $current_group = $_["group"];
+    //Check if the group belong to user
+    if ($currentUser->GroupRight($current_group)) {
+        //Check if it isn't already the default group
+        if ($currentUser->default_group() != $current_group) {
+            $default_group_button = [
+            "group" => $current_group,
+            "iduser" => $currentUser->id(),
+            ];
 
-			$tpl->assign("button",$default_group_button);
+            $tpl->assign("button", $default_group_button);
 
-			$tpl->draw(CORE_VIEWS."buttons/default_group");
-		}
-	}
-}
-else{
-	$current_group = 1; //@todo verify if user has access to group ID 1
+            $tpl->draw(CORE_TEMPLATES."buttons/default_group");
+        }
+    }
+} else {
+    $current_group = 1; //@todo verify if user has access to group ID 1
 
-	//If there is a default group and no group is selected we redirect to the default group
-	if($currentUser->default_group() != ""){
-		$current_group = $currentUser->default_group();
-	}
+    //If there is a default group and no group is selected we redirect to the default group
+    if ($currentUser->default_group() != "") {
+        $current_group = $currentUser->default_group();
+    }
 }
 
 //If current user as the right to see this group
-if($currentUser->GroupRight($current_group)){
-	$tpl->draw(CORE_VIEWS."grids/container/fluid");
-		$sensors_exists = Draw::sensors_widgets($current_group,$tpl);
-		$webobjects_exists = Draw::objects_widgets($current_group,$tpl);
-	$tpl->draw(CORE_VIEWS."grids/row/2close");
-}
-else{
+if ($currentUser->GroupRight($current_group)) {
+    $tpl->draw(CORE_TEMPLATES."grids/container/fluid");
+        $sensors_exists = Draw::sensors_widgets($current_group, $tpl);
+        $webobjects_exists = Draw::objects_widgets($current_group, $tpl);
+    $tpl->draw(CORE_TEMPLATES."grids/row/2close");
+} else {
 //If current user doesn't have access to this group
-	$tpl->assign("text","You don't have access to this group");
-	$tpl->draw(CORE_VIEWS."text/h1");
+    $tpl->assign("text", "You don't have access to this group");
+    $tpl->draw(CORE_TEMPLATES."text/h1");
 }
 
 
-/*
-	foreach($sensors as $sensor_name){
-		//Get sensors configuration
-		
-
-		//Get all sensors inside this group
-		if(isset($_["group"])){
-			$sensor_widgets = $sensors_db->loadAll([
-				"group_key" => $_["group"]
-				]);
-		}
-
-		if($sensor_widgets){
-			foreach($sensor_widgets as $sensor_widget){
-				$websensors[$key]["id"] = $sensor_widget["id"];
-				$websensors[$key]["widget"] = $sensor_name;
-				$websensors[$key]["type"] = $sensor_name;
-				$websensors[$key]["datalink"] = $sensor_widget["sensor_id"];
-
-				$websensors[$key]["name"] = htmlspecialchars_decode($sensor_widget["entity_name"]);
-				$websensors[$key]["description"] = htmlspecialchars_decode($sensor_widget["entity_description"]);
-				$websensors[$key]["icon"] = USER_SENSORS.$sensor_name."/icon.png";
-
-				$sensor_data_db = new Entity("data","data/".$sensor_widget["sensor_id"]);
-				$sensor_data = $sensor_data_db->getById($sensor_data_db->rowCount());
-				$data_unparsed = $sensor_data["data"];
-
-				include(USER_SENSORS.$sensor_name."/data/parser.data");
-				$websensors[$key]["value"] = $data;
-				$websensors[$key]["state"] = $data_unparsed ? "success" : "danger";
-			$key++;
-			}
-		}
-	}
-*/
-
-	
 
 /*
-	if(isset($websensors)){
-			foreach($websensors as $websensor){
-				Draw::sensors_widgets($websensor,$tpl);
-			}
-		}
+    foreach($sensors as $sensor_name){
+        //Get sensors configuration
+        
+
+        //Get all sensors inside this group
+        if(isset($_["group"])){
+            $sensor_widgets = $sensors_db->loadAll([
+                "group_key" => $_["group"]
+                ]);
+        }
+
+        if($sensor_widgets){
+            foreach($sensor_widgets as $sensor_widget){
+                $websensors[$key]["id"] = $sensor_widget["id"];
+                $websensors[$key]["widget"] = $sensor_name;
+                $websensors[$key]["type"] = $sensor_name;
+                $websensors[$key]["datalink"] = $sensor_widget["sensor_id"];
+
+                $websensors[$key]["name"] = htmlspecialchars_decode($sensor_widget["entity_name"]);
+                $websensors[$key]["description"] = htmlspecialchars_decode($sensor_widget["entity_description"]);
+                $websensors[$key]["icon"] = USER_SENSORS.$sensor_name."/icon.png";
+
+                $sensor_data_db = new Entity("data","data/".$sensor_widget["sensor_id"]);
+                $sensor_data = $sensor_data_db->getById($sensor_data_db->rowCount());
+                $data_unparsed = $sensor_data["data"];
+
+                include(USER_SENSORS.$sensor_name."/data/parser.data");
+                $websensors[$key]["value"] = $data;
+                $websensors[$key]["state"] = $data_unparsed ? "success" : "danger";
+            $key++;
+            }
+        }
+    }
 */
 
-		?>
+    
+
+/*
+    if(isset($websensors)){
+            foreach($websensors as $websensor){
+                Draw::sensors_widgets($websensor,$tpl);
+            }
+        }
+*/
