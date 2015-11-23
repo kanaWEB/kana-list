@@ -30,18 +30,9 @@ if (isset($_["group"])) {
 
 //If current user as the right to see this group
 if ($currentUser->GroupRight($current_group)) {
-    //$tpl->draw(CORE_TEMPLATES."grids/container/fluid");
-    ?>
-    <div class="container-fluid">
-    <?
         $sensors_exists = Draw::sensors_widgets($current_group, $tpl);
         $webobjects_exists = Draw::objects_widgets($current_group, $tpl);
     //$tpl->draw(CORE_TEMPLATES."grids/row/2close");
-
-    ?>
-    </div>
-    <?
-
 } else {
 //If current user doesn't have access to this group
     $tpl->assign("text", "You don't have access to this group");
