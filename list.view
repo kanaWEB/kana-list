@@ -1,6 +1,9 @@
 <?php
 //Display objects as a list
+
+
 include(CORE_TEMPLATES."menu/items/menu_group.view");
+
 $dynamic_js[] = CORE_TEMPLATES."/dashboard/effect/effect_default.js";
 //Check if a group is selected
 if (isset($_["group"])) {
